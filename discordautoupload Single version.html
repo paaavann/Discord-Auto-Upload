@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to Discord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f04747;
+            border-radius: 5px;
+            display: none;
+        }
+
+        #successMessage {
+            background-color: #43b581;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        .file-input {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #5865f2;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #677bc4;
+        }
+
+        progress {
+            display: block;
+            width: 100%;
+            height: 20px;
+            margin-top: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin: 0 0 20px;
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        footer .signature {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .webhook-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body style="background-image: url('')">
+    <div class="container">
+        <h2>Upload to Discord</h2>
+        <div class="notification" id="errorMessage"></div>
+        <div class="notification" id="successMessage">Files successfully uploaded</div>
+        <form id="discordUploader" enctype="multipart/form-data" action="https://discordapp.com/api/webhooks/" method="post">
+            <input type="text" class="webhook-input" id="webhookUrl" name="webhookUrl" placeholder="Enter Webhook URL">
+            <input type="file" class="file-input" id="file" name="file" accept="image/jpeg, image/png, image/gif, video/mp4, video/webm, video/quicktime" multiple>
+            <button type="submit" class="upload-btn">Upload</button>
+            <progress id="progressBar" value="0" max="100"></progress>
+        </form>
+        <footer>
+            <span class="signature">Made by Paavan</span>
+        </footer>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Array of wallpaper URLs
+            var wallpapers = [
+                'https://images8.alphacoders.com/129/thumb-1920-1292972.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/524/712/928/forza-forza-horizon-4-video-games-car-wallpaper-d8c65d883030ec3890fc713e886274fa.jpg',
+                'https://c4.wallpaperflare.com/wallpaper/556/480/912/forza-forza-horizon-4-video-games-screen-shot-wallpaper-preview.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/337/703/669/nissan-gtr-r34-nismo-forza-horizon-4-car-wallpaper-49a0289db1faed1b16c7c8ffe081c6ed.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/681/554/339/abstract-planet-space-purple-wallpaper-6970a84df14a9dbb16f7683f30a186ad.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/649/484/984/photography-landscape-nature-mountains-wallpaper-c79d8611d8f43eda8fb79ffde6c12106.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/464/322/337/mr-robot-tv-shows-artwork-4k-wallpaper-58561dd850103cc8c00c916e5832f4fa.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/353/587/818/breaking-bad-heisenberg-walter-white-aaron-paul-wallpaper-e211d2905db6becbba6812c540186952.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/1014/945/284/better-call-saul-breaking-bad-saul-goodman-googly-eyes-mirror-hd-wallpaper-19a038ddf10a4dab3697a84fc091269d.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/506/46/546/walter-white-breaking-bad-desert-amc-wallpaper-d92018cde19a1dcb3697885f0021663d.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/975/511/725/cyber-cyberpunk-cyberpunk-2077-car-futuristic-hd-wallpaper-d9d038ad71eadd6b9647d82ff011867d.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/0/603/719/gta-vi-grand-theft-auto-grand-theft-auto-6-rockstar-games-hd-wallpaper-c8e63df8e090fc48a05c013e08d2843a.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/440/479/655/rockstar-game-rockstar-games-red-dead-redemption-2-gang-hd-wallpaper-e900884db1ca3d9bf6a7b84fe0f136dd.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/88/698/360/space-black-hole-interstellar-planet-wallpaper-7806ed3840100c9880ac114e1852449a.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/683/186/563/macos-mojave-day-wallpaper-13a4fdadfc0811bfe145278604fcd852.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/742/352/991/assetto-corsa-porsche-992-gt3-rs-video-game-car-racing-hd-wallpaper-eb360c8da3e1bf4905d4cbb9dd5c2c60.jpg',
+                'https://r4.wallpaperflare.com/wallpaper/187/931/815/city-game-sky-grand-theft-auto-v-gta-v-hd-wallpaper-2f8a14fb732812ed28a6fb7eb8c721e0.jpg'
+            ];
+
+            // Set random wallpaper as background
+            $('body').css('background-image', 'url(' + wallpapers[Math.floor(Math.random() * wallpapers.length)] + ')');
+
+            $('#discordUploader').submit(function(e) {            
+                e.preventDefault();
+                var files = $('#file')[0].files;
+                var webhookUrl = $('#webhookUrl').val();
+                if (!webhookUrl) {
+                    $('#errorMessage').text("Please enter a Webhook URL.");
+                    $('#errorMessage').show();
+                    return;
+                }
+                if (files.length === 0) {
+                    $('#errorMessage').text("Please select at least one file.");
+                    $('#errorMessage').show();
+                } else {
+                    $('#errorMessage').hide();
+                    // Proceed with uploading files
+                    uploadFiles(files);
+                }
+            });
+
+            function uploadFiles(files) {
+                var totalFiles = files.length;
+                var filesUploaded = 0;
+
+                function uploadFile(file) {
+                    var formData = new FormData();
+                    formData.append('file', file);
+                    var url = $('#webhookUrl').val();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function() {
+                            filesUploaded++;
+                            var progress = filesUploaded / totalFiles * 100;
+                            $('#progressBar').val(progress);
+
+                            if (filesUploaded === totalFiles) {
+                                $('#discordUploader')[0].reset();
+                                $('#progressBar').val(0);
+                                $('#successMessage').show(); // Show success message
+                            } else {
+                                // Upload next file
+                                uploadFile(files[filesUploaded]);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error uploading file:", error);
+                        }
+                    });
+                }
+
+                // Start uploading the first file
+                uploadFile(files[0]);
+            }
+        });
+    </script>
+</body>
+</html>

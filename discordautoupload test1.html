@@ -1,0 +1,181 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload to Discord</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('https://r4.wallpaperflare.com/wallpaper/506/46/546/walter-white-breaking-bad-desert-amc-wallpaper-d92018cde19a1dcb3697885f0021663d.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ff3333;
+            border-radius: 5px;
+            display: none;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        .file-input {
+            display: block;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .upload-btn {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background-color: #2196F3;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background-color: #0b7dda;
+        }
+
+        progress {
+            display: block;
+            width: 100%;
+            height: 20px;
+            margin-top: 10px;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin: 0 0 20px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        footer .signature {
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Upload to Discord</h2>
+        <div class="notification" id="errorMessage"></div>
+        <form id="discordUploader" enctype="multipart/form-data" action="https://discordapp.com/api/webhooks/" method="post">
+            <input type="file" class="file-input" id="file" name="file" accept="image/png, image/jpeg, video/*" multiple>
+            <button type="submit" class="upload-btn">Upload</button>
+            <progress id="progressBar" value="0" max="100"></progress>
+        </form>
+        <footer>
+            <span class="signature">Made by Paavan</span>
+        </footer>
+    </div>
+
+    <script>
+        function getKey() {
+            if ('function' !== typeof URL) {
+                var url_string = window.location.href;
+                var pathArray = window.location.href.split('key=');
+                var c = pathArray[1];
+            } else {
+                var url_string = window.location.href;
+                var url = new URL(url_string);
+                var c = url.searchParams.get('key');
+            }
+            return c;
+        }
+
+        $(document).ready(function() {
+            $('#discordUploader').submit(function(e) {            
+                e.preventDefault();
+                var files = $('#file')[0].files;
+                if (files.length === 0) {
+                    $('#errorMessage').text("Please select at least one file.");
+                    $('#errorMessage').show();
+                } else {
+                    $('#errorMessage').hide();
+                    // Proceed with uploading files
+                    uploadFilesInBatches(files);
+                }
+            });
+
+            function uploadFilesInBatches(files) {
+                var batchSize = 10; // Number of files to upload per batch
+                var totalFiles = files.length;
+                var batches = Math.ceil(totalFiles / batchSize);
+
+                var currentBatch = 0;
+
+                function uploadNextBatch() {
+                    var formData = new FormData();
+                    var start = currentBatch * batchSize;
+                    var end = Math.min(start + batchSize, totalFiles);
+
+                    for (var i = start; i < end; i++) {
+                        formData.append('file-' + i, files[i]);
+                    }
+
+                    var url = 'https://discordapp.com/api/webhooks/' + getKey();
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function() {
+                            $('#progressBar').val((currentBatch + 1) / batches * 100);
+
+                            currentBatch++;
+                            if (currentBatch < batches) {
+                                // Upload next batch after a delay (e.g., 5 seconds)
+                                setTimeout(uploadNextBatch, 5000);
+                            } else {
+                                $('#discordUploader')[0].reset();
+                                $('#progressBar').val(0);
+                                alert("All files uploaded successfully");
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error uploading files:", error);
+                        }
+                    });
+                }
+
+                uploadNextBatch();
+            }
+        });
+    </script>
+</body>
+</html>
